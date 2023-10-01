@@ -1,35 +1,30 @@
 ﻿using System;
-using System.Drawing;
-using System.Globalization;
 
-namespace Rectangles
-{
-    public static class RectanglesTask
-    {
-        public static bool AreIntersected(Rectangle r1, Rectangle r2)
-        {
-            bool isIntersectionByX = !((r1.Right < r2.Left) || (r2.Right < r1.Left));
-            bool isIntersectionByY = !((r1.Bottom < r2.Top) || (r2.Bottom < r1.Top));
-            return isIntersectionByX && isIntersectionByY;
+namespace Rectangles {
+    public static class RectanglesTask {
+        public static bool AreIntersected(Rectangle r0, Rectangle r1) {
+            var isIntersectedByX = !((r0.Right < r1.Left) || (r1.Right < r0.Left));
+            var isIntersectedByY = !((r0.Bottom < r1.Top) || (r1.Bottom < r0.Top));
+            return isIntersectedByX && isIntersectedByY;
         }
 
-        public static int IntersectionSquare(Rectangle r1, Rectangle r2)
-        {
-            if (!AreIntersected(r1, r2)) return 0;
-            var width = Math.Min(r1.Right, r2.Right) - Math.Max(r1.Left, r2.Left);
-            var height = Math.Min(r1.Bottom, r2.Bottom) - Math.Max(r1.Top, r2.Top);
+        public static int IntersectionSquare(Rectangle r0, Rectangle r1) {
+            if (!AreIntersected(r0, r1)) return 0;
+            var width = Math.Min(r0.Right, r1.Right) - Math.Max(r0.Left, r1.Left);
+            var height = Math.Min(r0.Bottom, r1.Bottom) - Math.Max(r0.Top, r1.Top);
             return width * height;
         }
 
-        public static int IndexOfInnerRectangle(Rectangle r1, Rectangle r2)
-        {
-            bool is1Nested = (r2.Left <= r1.Left && r1.Right <= r2.Right) 
-                && (r2.Top <= r1.Top && r1.Bottom <= r2.Bottom);
-            bool is2Nested = (r1.Left <= r2.Left && r2.Right <= r1.Right) 
-                && (r1.Top <= r2.Top && r2.Bottom <= r1.Bottom);
-            if (is1Nested) return 0;
-            else if (is2Nested) return 1;
-            else return -1;
+        public static int IndexOfInnerRectangle(Rectangle r0, Rectangle r1) {
+            if (r0.IsInnerIn(r1)) return 0;
+            if (r1.IsInnerIn(r0)) return 1;
+            return -1;
         }
+    }
+
+    public static class RectangleExtensions {
+        public static bool IsInnerIn(this Rectangle rect, Rectangle innerIn) =>
+            (innerIn.Left <= rect.Left && rect.Right <= innerIn.Right)
+                && (innerIn.Top <= rect.Top && rect.Bottom <= innerIn.Bottom);
     }
 }
