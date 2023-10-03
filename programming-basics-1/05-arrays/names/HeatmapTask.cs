@@ -1,29 +1,20 @@
-﻿using System;
-using System.Linq;
+﻿using System.Linq;
 
-namespace Names
-{
-    internal static class HeatmapTask
-    {
-        public static HeatmapData GetBirthsPerDateHeatmap(NameData[] names)
-        {
-            var days = new string[30];
-            for (int i = 0; i < days.Length; i++)
-                days[i] = (2 + i).ToString();
+namespace Names {
+    internal static class HeatmapTask {
+        public static HeatmapData GetBirthsPerDateHeatmap(NameData[] names) {
+            var days = Enumerable.Range(2, 30).Select(i => i.ToString()).ToArray();
+            var month = Enumerable.Range(1, 12).Select(i => i.ToString()).ToArray();
+            var heatmap = new double[30, 12];
+            var groups = names
+                .Where(p => p.BirthDate.Day != 1)
+                .GroupBy(p => p.BirthDate.Month);
 
-            var mounth = new string[12];
-            for (int i = 0; i < mounth.Length; i++)
-                mounth[i] = (1 + i).ToString();
+            foreach (var byMonth in groups)
+                foreach (var byDay in byMonth.GroupBy(p => p.BirthDate.Day))
+                    heatmap[byDay.Key - 2, byMonth.Key - 1] = byDay.Count();
 
-            var countBirth = new double[30, 12];
-            for (var i = 0; i < 30; i++)
-                for (var j = 0; j < 12; j++)
-                {
-                    foreach (var name in names)
-                        if (name.BirthDate.Month == (j + 1) && name.BirthDate.Day == (i + 2)) countBirth[i, j]++;
-                }
-
-            return new HeatmapData("Пример карты интенсивностей", countBirth, days, mounth);
+            return new HeatmapData("Пример карты интенсивностей", heatmap, days, month);
         }
     }
 }
