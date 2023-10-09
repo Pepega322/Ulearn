@@ -1,62 +1,60 @@
 ﻿using System;
-using System.Diagnostics.CodeAnalysis;
 
-namespace Recognizer
-{
-    internal static class SobelFilterTask
-    {
-        public static double[,] SobelFilter(double[,] original, double[,] sx)
-        {
-            var width = original.GetLength(0);
-            var height = original.GetLength(1);
-            var result = new double[width, height];
+namespace Recognizer {
+    internal static class SobelFilterTask {
+        public static double[,] SobelFilter(double[,] original, double[,] filter) {
+            var image = new Matrix(original);
+            var fileteredImage = image.MakeConvolution(new Matrix(filter));
+            return fileteredImage.Data;
+        }
+    }
 
-            var sy = GetTransposeMatrix(sx);
-            var matrixCenterIndex = sx.GetLength(0) / 2;
-            for (int x = matrixCenterIndex; x < width - matrixCenterIndex; x++)
-                for (int y = matrixCenterIndex; y < height - matrixCenterIndex; y++)
-                {
-                    var gx = GetConvolution(original, sx, x, y);
-                    var gy = GetConvolution(original, sy, x, y);
-                    result[x, y] = Math.Sqrt(gx * gx + gy * gy);
-                }
+    public class Matrix {
+        public readonly double[,] Data;
+        public readonly int Width;
+        public readonly int Heigth;
 
-            return result;
+        public Matrix(double[,] data) {
+            Data = data;
+            Width = data.GetLength(0);
+            Heigth = data.GetLength(1);
         }
 
-        private static double GetConvolution(double[,] original, double[,] convolutionMatrix, int x, int y)
-        {
-            double convolution = 0;
-            var matrixCenterIndex = convolutionMatrix.GetLength(0) / 2;
+        public Matrix Transpose() {
+            var t = new double[Heigth, Width];
+            for (var i = 0; i < Heigth; i++)
+                for (var j = 0; j < Width; j++)
+                    t[i, j] = Data[j, i];
+            return new Matrix(t);
+        }
+
+        public Matrix MakeConvolution(Matrix conv) {
+            var center = conv.Width / 2;
+            var sobelT = conv.Transpose();
+            var filtered = new double[Width, Heigth];
+            for (int x = center; x < Width - center; x++)
+                for (int y = center; y < Heigth - center; y++) {
+                    var gx = MakeСonvolutionAt(conv, x, y);
+                    var gy = MakeСonvolutionAt(sobelT, x, y);
+                    filtered[x, y] = Math.Sqrt(gx * gx + gy * gy);
+                }
+            return new Matrix(filtered);
+        }
+
+        private double MakeСonvolutionAt(Matrix convolution, int x, int y) {
+            double result = 0;
+            var center = convolution.Width / 2;
             var xi = 0;
             var yi = 0;
-            for (var i = x - matrixCenterIndex; i <= x + matrixCenterIndex; i++)
-            {
-                for (var j = y - matrixCenterIndex; j <= y + matrixCenterIndex; j++)
-                {
-                    var orig = original[i, j];
-                    var kren = convolutionMatrix[xi, yi];
-                    convolution += orig * kren;
+            for (var i = x - center; i <= x + center; i++) {
+                for (var j = y - center; j <= y + center; j++) {
+                    result += Data[i, j] * convolution.Data[xi, yi];
                     yi++;
                 }
                 xi++;
                 yi = 0;
             }
-
-            return convolution;
-        }
-
-        private static double[,] GetTransposeMatrix(double[,] matrix)
-        {
-            var xSize = matrix.GetLength(0);
-            var ySize = matrix.GetLength(1);
-            var transposeMatrix = new double[ySize, xSize];
-
-            for (var i = 0; i < xSize; i++)
-                for (var j = 0; j < ySize; j++)
-                    transposeMatrix[j, i] = matrix[i, j];
-
-            return transposeMatrix;
+            return result;
         }
     }
 }

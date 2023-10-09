@@ -5,7 +5,6 @@ namespace Recognizer
         public static Line[] HoughAlgorithm(double[,] original)
         {
             var width = original.GetLength(0);
-
             var height = original.GetLength(1);
             return new[]
             {
