@@ -3,45 +3,32 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 
-namespace TextAnalysis
-{
-    static class SentencesParserTask
-    {
-        public static List<List<string>> ParseSentences(string text)
-        {
-            var sentencesList = new List<List<string>>();
-            var buildWord = new StringBuilder();
+namespace TextAnalysis {
+    static class SentencesParserTask {
+        private static StringBuilder builder = new StringBuilder();
+
+        public static List<List<string>> ParseSentences(string text) {
             var separators = new[] { '.', '!', '?', ';', ':', '(', ')' };
-            var sentences = text.Split(separators, System.StringSplitOptions.RemoveEmptyEntries);
-
-            foreach (var sentence in sentences)
-            {
-                var wordList = SentenceToList(sentence, buildWord);
-                if (wordList.Count != 0) sentencesList.Add(wordList);
-            }
-
-            return sentencesList;
+            var sentences = text.Split(separators, StringSplitOptions.RemoveEmptyEntries);
+            return sentences
+                .Select(s => SentenceToList(s))
+                .Where(l => l.Count != 0)
+                .ToList();
         }
 
-        static List<string> SentenceToList(string sentence, StringBuilder buildWord)
-        {
-            var wordList = new List<string>();
-
-            for (var i = 0; i < sentence.Length; i++)
-            {
-                if (char.IsLetter(sentence[i]) || sentence[i] == '\'')
-                {
-                    buildWord.Append(char.ToLower(sentence[i]));
+        private static List<string> SentenceToList(string sentence) {
+            var words = new List<string>();
+            for (var i = 0; i < sentence.Length; i++) {
+                if (char.IsLetter(sentence[i]) || sentence[i] == '\'') {
+                    builder.Append(char.ToLower(sentence[i]));
                     if (i != sentence.Length - 1) continue;
                 }
-                if (buildWord.Length != 0)
-                {
-                    wordList.Add(buildWord.ToString());
-                    buildWord.Clear();
+                if (builder.Length != 0) {
+                    words.Add(builder.ToString());
+                    builder.Clear();
                 }
             }
-
-            return wordList;
+            return words;
         }
     }
 }
