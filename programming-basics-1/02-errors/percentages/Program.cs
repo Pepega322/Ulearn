@@ -1,27 +1,30 @@
 ﻿using System;
-using System.Globalization;
 
-namespace Percentages
-{
-    internal class Program
-    {
-        static void Main(string[] args)
-        {
-            string userInput = Console.ReadLine();
-            Console.WriteLine(Calculate(userInput));
+namespace Percentages {
+    public class Program {
+        static void Main() {
+            var credit = new Credit(Console.ReadLine());
+            Console.WriteLine(credit.FinalAmount);
+        }
+    }
+
+    internal class Credit {
+        public readonly double Amount;
+        public readonly double InterestRate;
+        public readonly double CreditPeriod;
+
+        public double FinalAmount {
+            get {
+                var multiplier = 1 + InterestRate / 12 / 100;
+                return Amount * Math.Pow(multiplier, CreditPeriod);
+            }
         }
 
-        static double SplitAndParse(string userInput, int number)
-        {
-            return double.Parse(userInput.Split(' ')[number], CultureInfo.InvariantCulture);
-        }
-        static double Calculate(string userInput)
-        {
-            double amountOfMoney = SplitAndParse(userInput, 0);
-            double rateInPercents = SplitAndParse(userInput, 1);
-            double numberOfMonth = SplitAndParse(userInput, 2);
-            double moneyMultiplier = 1+0.01*rateInPercents/12;
-            return amountOfMoney * Math.Pow(moneyMultiplier, numberOfMonth);
+        public Credit(string input) {
+            var data = input.Split(' ');
+            Amount = double.Parse(data[0]);
+            InterestRate = double.Parse(data[1]);
+            CreditPeriod = double.Parse(data[2]);
         }
     }
 }

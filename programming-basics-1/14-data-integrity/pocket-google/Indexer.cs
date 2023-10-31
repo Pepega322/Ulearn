@@ -1,66 +1,45 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Linq;
-using System.Runtime.InteropServices;
-using System.Text;
-using System.Threading.Tasks;
-using static System.Net.Mime.MediaTypeNames;
 
-namespace PocketGoogle
-{
-    public class Indexer : IIndexer
-    {
-        public readonly char[] Separators;
-        public readonly Dictionary<string, Dictionary<int, List<int>>> SearchData;
+namespace PocketGoogle {
+    public class Indexer : IIndexer {
+        private static readonly HashSet<char> separators
+            = new[] { ' ', '.', ',', '!', '?', ':', '-', '\r', '\n' }.ToHashSet();
 
-        public Indexer()
-        {
-            Separators = new char[] { ' ', '.', ',', '!', '?', ':', '-', '\r', '\n' };
-            SearchData = new Dictionary<string, Dictionary<int, List<int>>>();
-        }
+        private readonly Dictionary<string, Dictionary<int, List<int>>> data
+            = new Dictionary<string, Dictionary<int, List<int>>>();
 
-        public void Add(int id, string text)
-        {
-            var start = 0;
-            var end = 0;
-            while (end < text.Length && start < text.Length)
-            {
-                if (Separators.Contains(text[start]))
-                {
-                    start++;
-                    continue;
-                }
-                end = start + 1;
-                while (end != text.Length && !Separators.Contains(text[end]))
-                    end++;
-                var word = text.Substring(start, end - start);
-                if (!SearchData.ContainsKey(word)) SearchData[word] = new Dictionary<int, List<int>>();
-                if (!SearchData[word].ContainsKey(id)) SearchData[word][id] = new List<int>();
-                SearchData[word][id].Add(start);
-                start = end + 1;
+        public void Add(int id, string text) {
+            var wordBegin = 0;
+            int wordEnd;
+            while (wordBegin < text.Length) {
+                while (wordBegin != text.Length - 1 && separators.Contains(text[wordBegin]))
+                    wordBegin++;
+                wordEnd = wordBegin + 1;
+                while (wordEnd != text.Length && !separators.Contains(text[wordEnd]))
+                    wordEnd++;
+
+                var word = text.Substring(wordBegin, wordEnd - wordBegin);
+                if (!data.ContainsKey(word)) data[word] = new Dictionary<int, List<int>>();
+                if (!data[word].ContainsKey(id)) data[word][id] = new List<int>();
+                data[word][id].Add(wordBegin);
+                wordBegin = wordEnd + 1;
             }
         }
 
         public List<int> GetIds(string word)
-        {
-            var ids = new List<int>();
-            if (SearchData.ContainsKey(word))
-                ids.AddRange(SearchData[word].Keys);
-            return ids;
-        }
+            => data.ContainsKey(word) ? data[word].Keys.ToList() : new List<int>();
 
         public List<int> GetPositions(int id, string word)
-        {
-            if (!SearchData.ContainsKey(word)) return new List<int>();
-            return SearchData[word][id].ToList();
-        }
+            => data.ContainsKey(word) ? data[word][id].ToList() : new List<int>();
 
-        public void Remove(int id)
-        {
-            foreach (var wordData in SearchData.ToList())
-            {
-                if (!wordData.Value.Remove(id)) continue;
-                if (!wordData.Value.Any()) SearchData.Remove(wordData.Key);
+        public void Remove(int id) {
+            var toRemove = data
+                .Where(d => d.Value.ContainsKey(id))
+                .ToList();
+            foreach (var data in toRemove) {
+                data.Value.Remove(id);
+                if (data.Value.Count == 0) this.data.Remove(data.Key);
             }
         }
     }

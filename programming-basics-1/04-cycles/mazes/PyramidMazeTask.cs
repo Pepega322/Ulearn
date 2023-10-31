@@ -1,30 +1,15 @@
-﻿namespace Mazes
-{
-    public static class PyramidMazeTask
-    {
-        public static void MoveOut(Robot robot, int width, int height)
-        {
-            int i = 0;
-            while (true)
-            {
-                MoveHorizontal(robot, width, width - 3 - i);
-                i += 2;
-                if (robot.Finished) break;
-                MoveInDirection(robot, Direction.Up, 2);
-            }
-        }
-        static void MoveHorizontal(Robot robot, int width, int steps)
-        {
-            if (robot.X < (width - 2) / 2)
-                MoveInDirection(robot, Direction.Right, steps);
-            else
-                MoveInDirection(robot, Direction.Left, steps);
-        }
+﻿namespace Mazes {
+    public static class PyramidMazeTask {
+        public static void MoveOut(Robot robot, int width, int height) {
+            var steps = width - 3;
 
-        static void MoveInDirection(Robot robot, Direction direction, int steps)
-        {
-            for (int i = 0; i < steps; i++)
-                robot.MoveTo(direction);
+            while (true) {
+                if (robot.X < (width - 2) / 2) robot.MoveTo(Direction.Right, steps);
+                else robot.MoveTo(Direction.Left, steps);
+                steps -= 2;
+                if (robot.Finished) break;
+                robot.MoveTo(Direction.Up, 2);
+            }
         }
     }
 }

@@ -3,81 +3,65 @@ using System.Drawing;
 using System.Drawing.Drawing2D;
 
 
-namespace RefactorMe
-{
-    class DrawingInstrument
-    {
-        const double PI = Math.PI;
-        const float LengthStraight = 0.375f;
-        const float LengthDiagonal = 0.04f;
+namespace RefactorMe {
+    public static class DrawingInstrument {
+        private static float x, y;
+        private static Graphics graphics;
 
-        static float x, y;
-        static Graphics graphics;
-
-        public static void Initialize(Graphics newGraphics)
-        {
-            graphics = newGraphics;
+        public static void Initialize(Graphics g) {
+            graphics = g;
             graphics.SmoothingMode = SmoothingMode.None;
             graphics.Clear(Color.Black);
         }
 
-        public static void SetPosition(float x0, float y0)
-        {
+        public static void SetPosition(float x0, float y0) {
             x = x0;
             y = y0;
         }
 
-        public static void MakeLine(Pen color, double length, double angle)
-        {
-            //Делает шаг длиной dlina в направлении ugol и рисует пройденную траекторию
-            var x1 = (float)(x + length * Math.Cos(angle));
-            var y1 = (float)(y + length * Math.Sin(angle));
-            graphics.DrawLine(color, x, y, x1, y1);
-            x = x1;
-            y = y1;
-        }
-
-        public static void ChangePosition(double length, double angle)
-        {
+        public static void ChangePosition(double length, double angle) {
             x = (float)(x + length * Math.Cos(angle));
             y = (float)(y + length * Math.Sin(angle));
         }
+
+        public static void MakeLine(Pen color, double length, double angle) {
+            var x1 = x;
+            var y1 = y;
+            ChangePosition(length, angle);
+            graphics.DrawLine(color, x1, y1, x, y);
+        }
     }
 
-    public class ImpossibleSquare
-    {
+    public class ImpossibleSquare {
         const double PI = Math.PI;
-        const float LengthStraight = 0.375f;
-        const float LengthDiagonal = 0.04f;
+        const float StraightLine = 0.375f;
+        const float DiagonalLine = 0.04f;
 
-        static void MakeOneSide(double startAngle, double startSize)
-        {
-            DrawingInstrument.MakeLine(Pens.Yellow, startSize * LengthStraight, startAngle);
-            DrawingInstrument.MakeLine(Pens.Yellow, startSize * LengthDiagonal * Math.Sqrt(2), startAngle + PI / 4);
-            DrawingInstrument.MakeLine(Pens.Yellow, startSize * LengthStraight, startAngle + PI);
-            DrawingInstrument.MakeLine(Pens.Yellow, startSize * LengthStraight - startSize * LengthDiagonal,
-                startAngle + PI / 2);
-
-            DrawingInstrument.ChangePosition(startSize * LengthDiagonal, startAngle - PI);
-            DrawingInstrument.ChangePosition(startSize * LengthDiagonal * Math.Sqrt(2), startAngle + 3 * PI / 4);
+        private static void DrawSide(double angle, double size) {
+            var pen = Pens.Yellow;
+            DrawingInstrument.MakeLine(pen, size * StraightLine, angle);
+            DrawingInstrument.MakeLine(pen, size * DiagonalLine * Math.Sqrt(2), angle + PI / 4);
+            DrawingInstrument.MakeLine(pen, size * StraightLine, angle + PI);
+            DrawingInstrument.MakeLine(pen, size * StraightLine - size * DiagonalLine, angle + PI / 2);
+            DrawingInstrument.ChangePosition(size * DiagonalLine, angle - PI);
+            DrawingInstrument.ChangePosition(size * DiagonalLine * Math.Sqrt(2), angle + 3 * PI / 4);
         }
 
-        public static void Draw(int width, int length, double rotateAngle, Graphics graphics)
-        {
-            // ugolPovorota пока не используется, но будет использоваться в будущем
-            DrawingInstrument.Initialize(graphics);
-
-            var size = Math.Min(width, length);
-
-            var diagonalLength = Math.Sqrt(2) * (size * LengthStraight + size * LengthDiagonal) / 2;
+        private static void SetInstrumentOnStart(int width, int length, int size) {
+            var diagonalLength = Math.Sqrt(2) * (size * StraightLine + size * DiagonalLine) / 2;
             var x0 = (float)(diagonalLength * Math.Cos(PI / 4 + PI)) + width / 2f;
             var y0 = (float)(diagonalLength * Math.Sin(PI / 4 + PI)) + length / 2f;
-
             DrawingInstrument.SetPosition(x0, y0);
-            MakeOneSide(0, size);
-            MakeOneSide(-PI / 2, size);
-            MakeOneSide(PI, size);
-            MakeOneSide(PI / 2, size);
+        }
+
+        public static void Draw(int width, int length, double rotateAngle, Graphics graphics) {
+            DrawingInstrument.Initialize(graphics);
+            var size = Math.Min(width, length);
+            SetInstrumentOnStart(width, length, size);
+            DrawSide(0, size);
+            DrawSide(-PI / 2, size);
+            DrawSide(PI, size);
+            DrawSide(PI / 2, size);
         }
     }
 }

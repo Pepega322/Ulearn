@@ -1,92 +1,51 @@
-﻿using System;
+﻿using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
 
-namespace TextAnalysis
-{
-    static class FrequencyAnalysisTask
-    {
-        public static Dictionary<string, string> GetMostFrequentNextWords(List<List<string>> text)
-        {
-            var mostFrequentNextWords = new Dictionary<string, string>();
-            var countedNGrams = GetCountedNGrams(text);
-            var valueBuilder = new StringBuilder();
+namespace TextAnalysis {
+    static class FrequencyAnalysisTask {
+        public static Dictionary<string, string> GetMostFrequentNextWords(List<List<string>> sentences) {
+            var nGrams = new NGramsFrequency();
+            nGrams.AddNGramm(sentences, 2);
+            nGrams.AddNGramm(sentences, 3);
 
-            foreach (var nGram in countedNGrams)
-            {
-                var key = nGram.Key;
-                var value = GetMostFrequentNextWord(nGram.Value, valueBuilder);
-                if (!mostFrequentNextWords.ContainsKey(key)) mostFrequentNextWords[key] = "";
-                mostFrequentNextWords[key] = value;
+            var words = new Dictionary<string, string>();
+            foreach (var nGram in nGrams) {
+                var start = nGram.Key;
+                var end = nGram.Value
+                     .OrderByDescending(p => p.Value)
+                     .ThenBy(p => p.Key)
+                     .First().Key;
+                if (!words.ContainsKey(start)) words[start] = string.Empty;
+                words[start] = end;
             }
+            return words;
+        }
+    }
 
-            return mostFrequentNextWords;
+    public class NGramsFrequency : IEnumerable<KeyValuePair<string, Dictionary<string, int>>> {
+        private readonly Dictionary<string, Dictionary<string, int>> nGrams;
+
+        public NGramsFrequency() {
+            nGrams = new Dictionary<string, Dictionary<string, int>>();
         }
 
-        private static string GetMostFrequentNextWord(Dictionary<string, int> countValues, StringBuilder valueBuilder)
-        {
-            var maxFrequency = 0;
-
-            foreach (var item in countValues)
-            {
-                var frequency = item.Value;
-                if (frequency > maxFrequency)
-                {
-                    valueBuilder.Clear();
-                    valueBuilder.Append(item.Key);
-                    maxFrequency = frequency;
-                    continue;
+        public void AddNGramm(List<List<string>> sentences, int n) {
+            foreach (var sentence in sentences)
+                for (var pos = 0; pos < sentence.Count - n + 1; pos++) {
+                    var start = string.Join(" ", sentence.Skip(pos).Take(n - 1));
+                    var end = sentence[pos + n - 1];
+                    if (!nGrams.ContainsKey(start)) nGrams[start] = new Dictionary<string, int>();
+                    if (!nGrams[start].ContainsKey(end)) nGrams[start][end] = 0;
+                    nGrams[start][end]++;
                 }
-                if (frequency == maxFrequency)
-                {
-                    var currentWord = valueBuilder.ToString();
-                    valueBuilder.Clear();
-                    var wordToAdd = string.CompareOrdinal(item.Key, currentWord) < 0 ? item.Key : currentWord;
-                    valueBuilder.Append(wordToAdd);
-                }
-            }
-
-            return valueBuilder.ToString();
         }
 
-        static Dictionary<string, Dictionary<string, int>> GetCountedNGrams(List<List<string>> text)
-        {
-            var countedNGrams = new Dictionary<string, Dictionary<string, int>>();
-            var minNGramSize = 2;
-            var maxNGramSize = 3;
-            var keyBuilder = new StringBuilder();
-
-            foreach (var sentence in text)
-            {
-                for (var nGramSize = minNGramSize; nGramSize <= maxNGramSize; nGramSize++)
-                {
-                    for (var wordNumber = 0; wordNumber < sentence.Count - nGramSize + 1; wordNumber++)
-                    {
-                        var key = GetKey(keyBuilder, sentence, nGramSize, wordNumber);
-                        var value = sentence[wordNumber + nGramSize - 1];
-
-                        if (!countedNGrams.ContainsKey(key)) countedNGrams[key] = new Dictionary<string, int>();
-                        if (!countedNGrams[key].ContainsKey(value)) countedNGrams[key][value] = 0;
-                        countedNGrams[key][value]++;
-                    }
-                }
-            }
-
-            return countedNGrams;
+        public IEnumerator<KeyValuePair<string, Dictionary<string, int>>> GetEnumerator() {
+            foreach (var nGram in nGrams)
+                yield return nGram;
         }
 
-        private static string GetKey(StringBuilder keyBuilder, List<string> sentence, int nGramSize, int startWord)
-        {
-            for (var iteration = 0; iteration < nGramSize - 1; iteration++)
-            {
-                var wordToAdd = sentence[startWord + iteration];
-                keyBuilder.Append(wordToAdd);
-                if (iteration != nGramSize - 2) keyBuilder.Append(" ");
-            }
-            var key = keyBuilder.ToString();
-            keyBuilder.Clear();
-            return key;
-        }
+        IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
     }
 }

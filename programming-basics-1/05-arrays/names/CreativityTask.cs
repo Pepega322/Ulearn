@@ -1,25 +1,18 @@
 ﻿using System;
 using System.Linq;
 
-namespace Names
-{
-    internal static class CreativityTask
-    {
-        public static HistogramData GetHistogramBirthsByMounth(NameData[] names)
-        {
-            var mounth = new string[12];
-            for (var i = 0; i < mounth.Length; i++)
-                mounth[i] = (1 + i).ToString();
+namespace Names {
+    internal static class CreativityTask {
+        public static HistogramData GetTop5PopularNames(NameData[] names) {
+            var top = names
+                .GroupBy(p => p.Name)
+                .OrderByDescending(g => g.Count())
+                .Take(10)
+                .Select(g => Tuple.Create(g.Key, g.Count()));
 
-            var birthCounts = new double[12];
-            for (var i = 0; i < birthCounts.Length; i++)
-            {
-                foreach (var name in names)
-                {
-                    if (name.BirthDate.Month == i + 1) birthCounts[i]++;
-                }
-            }
-            return new HistogramData("Рождаемость по месяцам", mounth, birthCounts);
+            return new HistogramData("Топ 5 самых популярных имён", 
+                top.Select(n => n.Item1).ToArray(), 
+                top.Select(n => (double)n.Item2).ToArray());
         }
     }
 }

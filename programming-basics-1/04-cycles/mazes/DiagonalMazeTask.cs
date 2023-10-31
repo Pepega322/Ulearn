@@ -1,40 +1,33 @@
 ﻿using System;
 
-namespace Mazes
-{
-    public static class DiagonalMazeTask
-    {
-        enum Axis : int
-        {
-            X, Y
-        }
-
-        public static void MoveOut(Robot robot, int width, int height)
-        {
-            int stepsByX = GetStepsPerMove(width, height, Axis.X);
-            int stepsByY = GetStepsPerMove(width, height, Axis.Y);
-            if (height > width) MoveInDirection(robot, Direction.Down, stepsByY);
-            while (true)
-            {
-                MoveInDirection(robot, Direction.Right, stepsByX);
+namespace Mazes {
+    public static class DiagonalMazeTask {
+        public static void MoveOut(Robot robot, int width, int height) {
+            var steps = GetStepsPerMove(width, height);
+            if (height > width) robot.MoveTo(Direction.Down, steps.Item2);
+            while (true) {
+                robot.MoveTo(Direction.Right, steps.Item1); 
                 if (robot.Finished) break;
-                MoveInDirection(robot, Direction.Down, stepsByY);
+                robot.MoveTo(Direction.Down, steps.Item2);
                 if (robot.Finished) break;
             }
         }
 
-        static int GetStepsPerMove(int width, int height, Axis axis)
-        {
-            int maxSide = Math.Max(width - 3, height - 3);
-            int minSide = Math.Min(width - 3, height - 3);
-            int stepsPerMoveForMaxSide = maxSide % minSide;
-            int stepsPerMoveForMinSide = minSide / (maxSide / stepsPerMoveForMaxSide - 1);
-            return ((width > height && axis == Axis.X) || (height > width && axis == Axis.Y)) ?
-                stepsPerMoveForMaxSide : stepsPerMoveForMinSide;
+        private static (int, int) GetStepsPerMove(int width, int height) {
+            var maxSide = Math.Max(width - 3, height - 3);
+            var minSide = Math.Min(width - 3, height - 3);
+            var stepsForMaxSide = maxSide % minSide;
+            var stepsForMinSide = minSide / (maxSide / stepsForMaxSide - 1);
+            var stepsForX = (width > height) ? stepsForMaxSide : stepsForMinSide;
+            var stepsForY = (width > height) ? stepsForMinSide : stepsForMaxSide;
+            return (stepsForX, stepsForY);
         }
+    }
 
-        static void MoveInDirection(Robot robot, Direction direction, int steps)
-        {
+    //Для того чтобы проект работал в VS нужно удалить этот класс в SnakeMazeTask или тут,
+    //но для Ulearn нужно вставлять именно в таком виде
+    public static class RobotExtensions {
+        public static void MoveTo(this Robot robot, Direction direction, int steps) {
             for (int i = 0; i < steps; i++)
                 robot.MoveTo(direction);
         }

@@ -1,33 +1,15 @@
-﻿namespace Pluralize
-{
-    public static class PluralizeTask
-    {
-        public static string PluralizeRubles(int count)
-        {
-            if (ReturnLastNumbers(count) >= 5 || ReturnLastNumbers(count) == 0) return "рублей";
-            else if (ReturnLastNumbers(count) >= 2) return "рубля";
-            else return "рубль";
+﻿namespace Pluralize {
+    public static class PluralizeTask {
+        public static string PluralizeRubles(int count) {
+            var lastDigits = ReturnLastNumbers(count);
+            if (lastDigits >= 5 || lastDigits == 0) return "рублей";
+            if (lastDigits >= 2) return "рубля";
+            return "рубль";
         }
 
-        static int ReturnLastNumbers(int number)
-        {
-            string numberInString = number.ToString();
-            int numberLength = numberInString.Length;
-
-            if (numberLength == 1)
-            {
-                return number;
-            }
-
-            int isItException = int.Parse(numberInString.Substring(numberLength - 2));
-            if (isItException >= 11 && isItException <= 14)
-            {
-                return 5;
-            }
-            else
-            {
-                return int.Parse(numberInString.Substring(numberLength - 1));
-            }
+        private static int ReturnLastNumbers(int count) {
+            if (count % 100 >= 11 && count % 100 <= 14) return 5;
+            return count % 10;
         }
     }
 }

@@ -56,7 +56,6 @@
     <Compile Include="HistogramSample.cs" />
     <Compile Include="NameData.cs" />
     <Compile Include="HistogramTask.cs" />
-    <Compile Include="PopularNames.cs" />
     <Compile Include="Program.cs" />
   </ItemGroup>
   <ItemGroup>
