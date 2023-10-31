@@ -3,16 +3,10 @@ using System.Collections.Generic;
 using System.IO;
 using System.Windows.Forms;
 
-namespace PocketGoogle
-{
-    internal static class Program
-    {
-        /// <summary>
-        ///     The main entry point for the application.
-        /// </summary>
+namespace PocketGoogle {
+    internal static class Program {
         [STAThread]
-        private static void Main()
-        {
+        private static void Main() {
             Application.EnableVisualStyles();
             Application.SetCompatibleTextRenderingDefault(false);
 
@@ -20,8 +14,7 @@ namespace PocketGoogle
             var indexer = new Indexer();
 
             var directoryInfo = new DirectoryInfo("Texts");
-            foreach (var file in directoryInfo.GetFiles("*.txt"))
-            {
+            foreach (var file in directoryInfo.GetFiles("*.txt")) {
                 var parts = file.Name.Split('.');
                 var id = int.Parse(parts[0]);
                 var text = File.ReadAllText(file.FullName).Replace("\r", "");
