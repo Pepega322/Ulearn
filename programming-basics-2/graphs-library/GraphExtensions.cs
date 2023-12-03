@@ -1,4 +1,7 @@
-﻿namespace Graphs;
+﻿
+using System.Data.SqlTypes;
+
+namespace Graphs;
 
 public static class GraphExtensions {
     public static IEnumerable<IEnumerable<Node>> FindConnectedComponents(this Graph graph) {
@@ -7,13 +10,13 @@ public static class GraphExtensions {
             var node = graph.Nodes.Where(n => !marked.Contains(n)).FirstOrDefault();
             if (node == default) break;
             var breadthSearch = node.BreadthSearch().ToList();
+            yield return breadthSearch;
             foreach (var visitedNode in breadthSearch)
                 marked.Add(visitedNode);
-            yield return breadthSearch;
         }
     }
 
-    public static List<Node> FindShortestPath(this Graph graph, Node start, Node end) {
+    public static List<Node>? FindShortestPath(this Graph graph, Node start, Node end) {
         var track = new Dictionary<Node, Node>();
         var queue = new Queue<Node>();
         track[start] = null;
@@ -27,8 +30,8 @@ public static class GraphExtensions {
             if (track.ContainsKey(end)) break;
         }
 
+        if (!track.ContainsKey(end)) return null;
         var path = new List<Node>();
-        if (!track.ContainsKey(end)) return path;
         while (end != null) {
             path.Add(end);
             end = track[end];
@@ -110,56 +113,66 @@ public static class GraphExtensions {
         return false;
     }
 
-    public static List<Node>? DijkstraAlgorithm(this Graph graph, Dictionary<Edge, double> weights, Node start, Node end) {
-        var notVisited = graph.Nodes.ToList();
-        var track = new Dictionary<Node, DijkstraData>();
-        track[start] = new DijkstraData(0);
+    public static List<Node>? DijkstraAlgorithm(
+        this Graph graph,
+        Dictionary<Edge, double> weights,
+        Node start,
+        Node end,
+        IPriorityQueue<Node> queue) {
+        var track = new Dictionary<Node, Node>();
+        track[start] = null;
+        queue.Add(start, 0);
 
         while (true) {
-            Node toOpen = null;
-            var bestPrice = double.PositiveInfinity;
-            foreach (var node in notVisited) {
-                if (track.ContainsKey(node) && track[node].Price < bestPrice) {
-                    bestPrice = track[node].Price;
-                    toOpen = node;
-                }
-            }
-            if (toOpen == null) return null;
+            var toOpenPair = queue.ExtractMin();
+            if (toOpenPair == null) return null;
+
+            var toOpen = toOpenPair.Item1;
+            var price = toOpenPair.Item2;
             if (toOpen == end) break;
 
             foreach (var e in toOpen.IncidentEdges.Where(z => z.From == toOpen)) {
                 var next = e.GetOtherNode(toOpen);
-                var nextPrice = track[toOpen].Price + weights[e];
-                if (!track.ContainsKey(next) || nextPrice < track[next].Price)
-                    track[next] = new DijkstraData(nextPrice, toOpen);
+                var newPrice = price + weights[e];
+                if (queue.UpdateOrAdd(next, newPrice))
+                    track[next] = toOpen;
             }
-            notVisited.Remove(toOpen);
         }
 
         var result = new List<Node>();
         while (end != null) {
             result.Add(end);
-            end = track[end].Previous;
+            end = track[end];
         }
         result.Reverse();
         return result;
     }
-
-    #region DijkstraAlgorithm
-    private class DijkstraData {
-        public Node Previous { get; set; }
-        public double Price { get; set; }
-
-        public DijkstraData(double price, Node previous) {
-            Previous = previous;
-            Price = price;
-        }
-
-        public DijkstraData(double price) : this(price, null) {
-            Price = price;
-        }
-    }
-    #endregion
 }
 
+public class DictionaryPriorityQueue<TKey> : IPriorityQueue<TKey>  {
+    Dictionary<TKey, double> dictionary = new();
 
+    public void Add(TKey key, double value) {
+        dictionary.Add(key, value);
+    }
+
+    public void Delete(TKey key) {
+        dictionary.Remove(key);
+    }
+
+    public Tuple<TKey, double> ExtractMin() {
+        if (dictionary.Count == 0) return null;
+        var minValue = dictionary.Values.Min();
+        var key = dictionary.Where(p => p.Value == minValue).Single().Key;
+        dictionary.Remove(key);
+        return Tuple.Create(key, minValue);
+    }
+
+    public bool TryGetValue(TKey key, out double value) {
+        return dictionary.TryGetValue(key, out value);
+    }
+
+    public void Update(TKey key, double newValue) {
+        dictionary[key] = newValue;
+    }
+}
